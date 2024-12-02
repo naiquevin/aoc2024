@@ -69,21 +69,13 @@ fn check_report_with_dampener(report: &Vec<i32>) -> bool {
                         return false;
                     }
 
-                    // Here there a two cases:
-                    //
-                    //   1. What if curr i.e. 2nd item is skipped?
-                    //   2. What if prev i.e. 1st item is skipped?
-                    //
+                    // Check if we can skip the current item
                     if is_gradual_delta(report[i + 1], p) {
                         continue;
-                    } else {
-                        is_incr = Some(curr > p);
-                        prev = Some(curr);
                     }
-                } else {
-                    is_incr = Some(curr > p);
-                    prev = Some(curr);
                 }
+                is_incr = Some(curr > p);
+                prev = Some(curr);
             }
             (Some(p), Some(incr)) => {
                 if !is_in_order(incr, curr, p) || !is_gradual_delta(curr, p) {
@@ -92,31 +84,17 @@ fn check_report_with_dampener(report: &Vec<i32>) -> bool {
                         return false;
                     }
 
-                    // Here we can specially handle 2 cases:
+                    // Here we need to specially handle 2 cases when
+                    // dealing with the 3rd item in the list where it
+                    // doesn't conform to the order already
+                    // established by the first two items
                     //
-                    //   1. When `curr` is the final item in the
-                    //      list. If this is the first encountered
-                    //      problem, then the rest of the list is fine
-                    //      so far, so we can drop the final item and
-                    //      consider the report safe.
+                    //   1) does removing the 1st item and recomputing
+                    //      the order help?
                     //
-                    //   2. When curr is the 3rd item and doesn't
-                    //      conform to the order so far, we can check
-                    //      two subcases:
+                    //   2) does removing the 2nd item and recomputing
+                    //      the order help?
                     //
-                    //        a) does removing the 1st item validate
-                    //           the rest of the report?
-                    //
-                    //        b)  does removing the 2nd item validate
-                    //            the rest of the report?
-                    //
-
-                    // Handle special case #1
-                    if i == report.len() - 1 {
-                        return true;
-                    }
-
-                    // Handle special case #2
                     if i == 2 {
                         if is_gradual_delta(curr, p) && is_in_order(curr > p, report[i + 1], curr) {
                             is_incr = Some(curr > p);
@@ -132,6 +110,9 @@ fn check_report_with_dampener(report: &Vec<i32>) -> bool {
                             continue;
                         }
                     }
+
+                    // For any other case, we skip curr by not updating
+                    // prev i.e. by doing nothing!
                 } else {
                     prev = Some(curr);
                 }
